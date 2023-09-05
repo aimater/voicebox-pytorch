@@ -233,7 +233,7 @@ class Attention(Module):
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h = h), (q, k, v))
 
         if exists(rotary_emb):
-            q, k = map(lambda t: apply_rotary_pos_emb(t, rotary_emb), (q, k))
+            q, k = map(lambda t: apply_rotary_pos_emb(rotary_emb, t), (q, k))
 
         out = self.attend(q, k, v, mask = mask)
 
@@ -592,7 +592,7 @@ class DurationPredictor(Module):
 
         if should_align:
             alignment_hard, _, alignment_logprob, _ = self.forward_aligner(phoneme_emb, phoneme_mask, mel, mel_mask)
-
+            target = alignment_hard
         # combine audio, phoneme, conditioning
 
         embed = torch.cat((x, phoneme_emb, cond), dim = -1)
@@ -676,7 +676,7 @@ class VoiceBox(Module):
 
         self.to_embed = nn.Linear(dim_in * 2 + dim_phoneme_emb, dim)
 
-        self.null_cond = nn.Parameter(torch.zeros(dim))
+        self.null_cond = nn.Parameter(torch.zeros(dim_in))
 
         self.conv_embed = ConvPositionEmbed(
             dim = dim,
